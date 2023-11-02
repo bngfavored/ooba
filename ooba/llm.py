@@ -17,6 +17,7 @@ from queue import Queue
 from.utils.openai_messages_converters import role_content_to_history
 from .install import install as install_oobabooga
 from .utils.get_app_dir import get_app_dir
+from pathlib import Path
 
 REPO_DIR = os.path.join(get_app_dir(), 'text-generation-ui')
 
@@ -27,7 +28,7 @@ class llm:
             print("\nGetting started...")
 
         try:
-            self.path = path
+            self.path = path if isinstance(path, Path) else Path(path)
             self.cpu = cpu
             self.verbose = verbose
 
@@ -42,8 +43,8 @@ class llm:
             install_oobabooga(gpu_choice=self.gpu_choice)
 
             # Start oobabooga server
-            model_dir = "/".join(path.split("/")[:-1])
-            model_name = path.split("/")[-1]
+            model_dir = str(self.path.parent)
+            model_name = self.path.name
 
             # Find an open port
             while True:
@@ -65,7 +66,7 @@ class llm:
             cmd = [
                 self.start_script,
                 "--model-dir", model_dir,
-                "--model", model_name,
+                "--model", f'"{model_name}"',
                 "--api-blocking-port", str(unused_blocking_port),
                 "--api-streaming-port", str(self.port),
                 "--extensions", "api",
